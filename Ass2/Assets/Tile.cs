@@ -12,9 +12,12 @@ public enum Tiletype
 }
 
 
-public class Tiles : MonoBehaviour
+
+public class Tile : MonoBehaviour
 {
     private int value;
+    private int rowIndex;
+    private int colIndex;
     private SpriteRenderer spriteRenderer;
     public Tiletype tileType;
 
@@ -42,4 +45,23 @@ public class Tiles : MonoBehaviour
             spriteRenderer.color = Color.cyan;
         }
     }
+
+    public void Initialize(int tileValue, int row, int col)
+    {
+        value = tileValue;
+        rowIndex = row;
+        colIndex = col;
+    }
+
+    public int GetRowIndex()
+    {
+        return rowIndex;
+    }
+
+    private int GetColIndex()
+    {
+        return colIndex;
+    }
+
+
 }
