@@ -62,6 +62,11 @@ public class Tile : MonoBehaviour
     {
         return colIndex;
     }
+    public void SetColor(Color newColor)
+    {
+        if (spriteRenderer != null)
+            spriteRenderer.color = newColor;
+    }
 
 
 }

@@ -1,80 +1,92 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class Astar : MonoBehaviour
 {
-    //// Start is called once before the first execution of Update after the MonoBehaviour is created
-    //void Start()
-    //{
+    // Reference to the grid from GridManager
+    public Tile[,] gridReference;
 
-    //}
-
-    //// Update is called once per frame
-    //void Update()
-    //{
-
-    //}
+    // Delay between steps for visualization (tweak this in inspector)
+    public float stepDelay = 0.02f;
 
 
-
-    public List<Vector2Int> FindShortestPath(Vector2Int start, Vector2Int goal, int gridWidth, int gridHeight)
+    // Coroutine version of A* pathfinding
+    public IEnumerator FindShortestPathCoroutine(Vector2Int start, Vector2Int goal, int gridWidth, int gridHeight, System.Action<List<Vector2Int>> onPathFound)
     {
-        // The open and closed sets
+        // Open and closed lists
         List<Vector2Int> openSet = new List<Vector2Int> { start };
         HashSet<Vector2Int> closedSet = new HashSet<Vector2Int>();
 
-        // Store cost so far and estimated total cost
+        // Cost maps
         Dictionary<Vector2Int, int> gScore = new Dictionary<Vector2Int, int>();
-        Dictionary<Vector2Int, int> hScore = new Dictionary<Vector2Int, int>();
+        Dictionary<Vector2Int, int> fScore = new Dictionary<Vector2Int, int>();
         Dictionary<Vector2Int, Vector2Int> cameFrom = new Dictionary<Vector2Int, Vector2Int>();
 
         gScore[start] = 0;
-        hScore[start] = ManhattanDistance(start, goal);
+        fScore[start] = ManhattanDistance(start, goal);
 
         while (openSet.Count > 0)
         {
-            // Find tile in open set with lowest fScore
+            // 🔹 Find the node in openSet with the lowest fScore
             Vector2Int current = openSet[0];
             foreach (var tile in openSet)
             {
-                if (hScore.ContainsKey(tile) && hScore[tile] < hScore[current])
+                if (fScore.ContainsKey(tile) && fScore[tile] < fScore[current])
                     current = tile;
             }
 
-            // If reached the goal, reconstruct and return path
+            // ✅ Goal reached — reconstruct path
             if (current == goal)
-                return ReconstructPath(cameFrom, current);
+            {
+                List<Vector2Int> finalPath = ReconstructPath(cameFrom, current);
+                onPathFound?.Invoke(finalPath);
+                yield break;
+            }
 
             openSet.Remove(current);
             closedSet.Add(current);
 
-            // Explore neighbours (up, down, left, right)
+            // 🟦 Visualize current visited tile
+            if (gridReference != null)
+            {
+                Tile tile = gridReference[current.y, current.x];
+                if (tile.tileType != Tiletype.Start && tile.tileType != Tiletype.Goal)
+                    tile.SetColor(Color.gray);
+            }
+
+            yield return new WaitForSeconds(stepDelay);
+
+            // 🔸 Explore neighbours (up, down, left, right)
             foreach (var neighbour in GetNeighbours(current, gridWidth, gridHeight))
             {
                 if (closedSet.Contains(neighbour))
                     continue;
 
-                int tentativeG = gScore[current] + 1; // cost of moving to neighbour
+                Tile neighbourTile = gridReference[neighbour.y, neighbour.x];
+
+                // Skip obstacles
+                if (neighbourTile.tileType == Tiletype.Obstacle)
+                    continue;
+
+                int tentativeG = gScore[current] + 1;
 
                 if (!openSet.Contains(neighbour))
                     openSet.Add(neighbour);
                 else if (tentativeG >= gScore[neighbour])
                     continue;
 
-                // Record best path
                 cameFrom[neighbour] = current;
                 gScore[neighbour] = tentativeG;
-                hScore[neighbour] = gScore[neighbour] + ManhattanDistance(neighbour, goal);
+                fScore[neighbour] = gScore[neighbour] + ManhattanDistance(neighbour, goal);
             }
         }
 
-        // No path found
-        return new List<Vector2Int>();
+        // ❌ No path found
+        onPathFound?.Invoke(new List<Vector2Int>());
     }
 
-    // Reconstruct path backwards
+    // 🔹 Reconstruct the final path
     List<Vector2Int> ReconstructPath(Dictionary<Vector2Int, Vector2Int> cameFrom, Vector2Int current)
     {
         List<Vector2Int> totalPath = new List<Vector2Int> { current };
@@ -86,13 +98,13 @@ public class Astar : MonoBehaviour
         return totalPath;
     }
 
-    // Manhattan distance
+    // 🔹 Manhattan Distance = steps ignoring diagonals
     int ManhattanDistance(Vector2Int a, Vector2Int b)
     {
         return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
     }
 
-    // Get neighbours (up/down/left/right)
+    // 🔹 Return valid up/down/left/right neighbours
     List<Vector2Int> GetNeighbours(Vector2Int tile, int width, int height)
     {
         List<Vector2Int> neighbours = new List<Vector2Int>();
@@ -113,20 +125,4 @@ public class Astar : MonoBehaviour
 
         return neighbours;
     }
-
-
-
-
-
-
-        //initialize the grid
-
-        //loop
-        //once you explore your neighbours, calculate g and h scores
-        // visit the neighbour with the lowst f score (g+h)
-        //if you reached the goal, reconstruct the path using the camefrom dictionary 
-    
-
-
-
 }
