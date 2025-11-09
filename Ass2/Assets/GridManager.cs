@@ -5,15 +5,16 @@ using UnityEngine.UI;
 
 public class GridManager : MonoBehaviour
 {
-    //Initialization of variables for the grid
+    //initialization of variables for the grid
     public GameObject tilePrefab;
     public Astar astar;
     public int rows = 50;
     public int cols = 50;
     private Tile[,] grid;
-    // Initializing the 2 main important tiles, start and goal tiles
+    //initializing the 2 main important tiles, start and goal tiles
     private Tile startTile;
     private Tile goalTile;
+    //initializing UI and temp variables
     private float TempRandom;
     bool executeOnce = false;
     public Text uiText; // Drag your Text component here in the Inspector
@@ -22,9 +23,12 @@ public class GridManager : MonoBehaviour
 
     void Start()
     {
+        // for loop function creating the grid tiles and setting colors
         InitializeGrid();
+        //the animation for showing the progress of A* algorithm 
         StartCoroutine(RunContinuousPathfinding());
-        uiText.gameObject.SetActive(false); // Hide text initially
+        // Hide text initially
+        uiText.gameObject.SetActive(false); 
     }
 
     IEnumerator RunContinuousPathfinding()

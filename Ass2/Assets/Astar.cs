@@ -4,21 +4,21 @@ using UnityEngine;
 
 public class Astar : MonoBehaviour
 {
-    // Reference to the grid from GridManager
+    //reference to the GridManager
     public Tile[,] gridReference;
 
-    // Delay between steps for visualization (tweak this in inspector)
+    //delay variable
     public float stepDelay = 0.02f;
 
 
-    // Coroutine version of A* pathfinding
+    //main function for A* path finding
     public IEnumerator FindShortestPathCoroutine(Vector2Int start, Vector2Int goal, int gridWidth, int gridHeight, System.Action<List<Vector2Int>> onPathFound)
     {
-        // Open and closed lists
+        //open and closed lists
         List<Vector2Int> openSet = new List<Vector2Int> { start };
         HashSet<Vector2Int> closedSet = new HashSet<Vector2Int>();
 
-        // Cost maps
+        //cost maps
         Dictionary<Vector2Int, int> gScore = new Dictionary<Vector2Int, int>();
         Dictionary<Vector2Int, int> fScore = new Dictionary<Vector2Int, int>();
         Dictionary<Vector2Int, Vector2Int> cameFrom = new Dictionary<Vector2Int, Vector2Int>();
@@ -28,7 +28,7 @@ public class Astar : MonoBehaviour
 
         while (openSet.Count > 0)
         {
-            // 🔹 Find the node in openSet with the lowest fScore
+            //find the node in openSet with the lowest fScore
             Vector2Int current = openSet[0];
             foreach (var tile in openSet)
             {
@@ -36,7 +36,7 @@ public class Astar : MonoBehaviour
                     current = tile;
             }
 
-            // ✅ Goal reached — reconstruct path
+            //if the goal is reached, start reconstructin the path
             if (current == goal)
             {
                 List<Vector2Int> finalPath = ReconstructPath(cameFrom, current);
@@ -44,10 +44,11 @@ public class Astar : MonoBehaviour
                 yield break;
             }
 
+            //swaps the tiles into the confirmed list
             openSet.Remove(current);
             closedSet.Add(current);
 
-            // 🟦 Visualize current visited tile
+            //changes colors of tiles that A* has checked to grey
             if (gridReference != null)
             {
                 Tile tile = gridReference[current.y, current.x];
@@ -57,7 +58,7 @@ public class Astar : MonoBehaviour
 
             yield return new WaitForSeconds(stepDelay);
 
-            // 🔸 Explore neighbours (up, down, left, right)
+            //checks neighbours (up, down, left, right)
             foreach (var neighbour in GetNeighbours(current, gridWidth, gridHeight))
             {
                 if (closedSet.Contains(neighbour))
@@ -65,7 +66,7 @@ public class Astar : MonoBehaviour
 
                 Tile neighbourTile = gridReference[neighbour.y, neighbour.x];
 
-                // Skip obstacles
+                //skip obstacles
                 if (neighbourTile.tileType == Tiletype.Obstacle)
                     continue;
 
@@ -82,11 +83,11 @@ public class Astar : MonoBehaviour
             }
         }
 
-        // ❌ No path found
+        //cant find path
         onPathFound?.Invoke(new List<Vector2Int>());
     }
 
-    // 🔹 Reconstruct the final path
+    //reconstruct the final path
     List<Vector2Int> ReconstructPath(Dictionary<Vector2Int, Vector2Int> cameFrom, Vector2Int current)
     {
         List<Vector2Int> totalPath = new List<Vector2Int> { current };
@@ -98,13 +99,13 @@ public class Astar : MonoBehaviour
         return totalPath;
     }
 
-    // 🔹 Manhattan Distance = steps ignoring diagonals
+    //manhattan Distance = steps ignoring diagonals
     int ManhattanDistance(Vector2Int a, Vector2Int b)
     {
         return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
     }
 
-    // 🔹 Return valid up/down/left/right neighbours
+    //return valid up/down/left/right neighbours
     List<Vector2Int> GetNeighbours(Vector2Int tile, int width, int height)
     {
         List<Vector2Int> neighbours = new List<Vector2Int>();
